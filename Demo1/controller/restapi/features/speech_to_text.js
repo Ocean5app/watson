@@ -16,9 +16,6 @@
      // the extend function adds additional information into our credentials from within the 
      // Watson and Bluemix operating environment
      var sttConfig = extend(config.speech_to_text, vcapServices.getCredentials('speech_to_text'));
-     console.log(config.speech_to_text);
-     console.log(vcapServices.getCredentials('speech_to_text'));
-     console.log(sttConfig);
      // request authorization to access the service
      var sttAuthService = watson.authorization(sttConfig);
  

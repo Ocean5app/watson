@@ -1,147 +1,153 @@
- /*
+/*
 ** z2c-speech.js
 */
+var a_player_target = "#a_player";
+var NLC_Button ; var stt_out; var msg_out;
+var _mic; var _stop;
+var b_token;
+/**
+ * invoke this function when the html page has completed loading
+ */
 function initPage ()
 {
-  // define the variables we need to access the microphone and stop icons in the web page
-  var _mic = $('#microphone'); var _stop = $("#stop");
-  var readText = $("#readText");
+  // initialize the b_token value to false. This means that we have not yet retrieved the speech to text token. 
+  b_token = false;
+  // create a cookie to hold the speech to text token
+  document.cookie = "stt-token=";
+  _mic = $('#microphone'); _stop = $("#stop");
+  var readText = $("#readText"); NLC_Button = $("#classifySpeech");
+  // where do we place speech to text output
+  var stt_target = '#speech'; stt_out = $(stt_target);
+  // local variables to hold chat and conversation html targets
+  var chat = $('#chat'); var dialog_target = '#conversation';
+  var stream;
+  // code refactor!
+  // the inline code we used to enable and disable the microphone and stop buttons as been
+  // refactored into a single function call, so that we stop replicating that logic
+  // throughout the code.
+  toggle_mic(_mic, _stop, false)
 
-  var tokenbysession = '';
-  // start things off by enabling the microphone button and disabling the stop recording button
-    _mic.addClass("mic_enabled");
-    _stop.addClass("mic_disabled");
-    $.when($.get('/api/speech-to-text/token')).done(
-      function (token) {
-        tokenbysession=token;
-        console.log(tokenbysession);
-      })
-    
-    // Identify what to do when the microphone button has been clicked
   _mic.on("click", function ()
     {
       var _className = this.className;
-      // if the microphone button is enabled, then do the following. 
-      // otherwise, ignore the mouse button click
       if(this.className == "mic_enabled")
       {
-        // disable the microphone, so that clicking it again is ignored
-        _mic.addClass("mic_disabled");
-        _mic.removeClass("mic_enabled");
-        // enable the stop button, so that the speech to text process can be stopped on demand
-        _stop.addClass("mic_enabled");
-        _stop.removeClass("mic_disabled");
-        // get the token from the server.
-        // 
-        // this only needs to be done once per browser session. Here, we're doing it every time
-        // the user wants to talk. It would be better if we got the token in the base initPage function
-        // and not on every click request. 
-        // I'll leave it to you to make this change, it's pretty simple
-        // and will make your app run more smoothly
-        //
-        if (tokenbysession !=''){
-          // the stream is what comes in from the microphone
-          stream = WatsonSpeech.SpeechToText.recognizeMicrophone({
-            // it needs the token received from the server
-              token: tokenbysession,
-              // and the outputElement is the html element defined with an id="speech" statement
-              outputElement: '#speech' // CSS selector or DOM Element
-            });
-            // if there's an error in this process, log it to the browser console.
-          stream.on('error', function(err) { console.log(err); });
-        }
-
+        // invoke the toggle function
+        toggle_mic(_mic, _stop, true)
+        // get whatever is the next step in the dialog. That logic is defined and controlled in the z2c-dialog.js file
+        nextStep();
         }
       });
 
-  _stop.on("click",  function() {
-    console.log("Stopping text-to-speech service...");
-    // the if statement is here in case the stop button was clicked either before the stream 
-    // was successfully created, or if there was an error in the creation process. 
-    // there are two things we need to test for, first, has stream even been defined?
-    // we test for that first because the first test to pass, in an OR situation is the 
-    // last test made. So, is the stream undefined? If not, is it defined, but null.
-    // in either case, we have no stream to stop.
-    // The exclamation point at the beginning is a NOT symbol 
-    if (!((typeof(stream) == "undefined") || (stream == null))) {stream.stop(); }
-    // just as in the mic.on.click processing, it would be useful to also check 
-    // to see if the stop button is enabled, which would make this code more robust. 
-    //
-    _mic.addClass("mic_enabled");
-    _mic.removeClass("mic_disabled");
-    _stop.addClass("mic_disabled");
-    _stop.removeClass("mic_enabled");
-  });
-  // do something useful when the readText button is clicked.
-  readText.on("click",  function()
+  _stop.on("click",  function()
   {
-    console.log("initiating text-to-speech service...");
-    // if we're going to have Watson talk, we probably don't want it listening at 
-    // the same time, so go through the normal 'turn off the microphone' process. 
-    // this is missing an if statement, which would make the code more robust.
-    // can you figure out what's missing?
-    //
-    if (!((typeof(stream) == "undefined") || (stream == null))) {stream.stop(); }
-    _mic.addClass("mic_enabled");
-    _mic.removeClass("mic_disabled");
-    _stop.addClass("mic_disabled");
-    _stop.removeClass("mic_enabled");
-    var sessionPermissions = JSON.parse(localStorage.getItem('sessionPermissions')) ? 0 : 1;
-    // get the text to be turned into an audio signal
-    var textString = $("#chat").val(  );
-    // select the voice to use (this is assuming US English as the language.)
-    // change the en-US_AllisonVoice to a different language if desired.
-    //var voice = 'en-US_AllisonVoice';
-    var voice = 'ja-JP_EmiVoice'; //日语发音
-    // get the audio element from the HTML 5 audio player
-    var audio = $("#a_player").get(0);
-    // build the url to call to synthesize the text
-    var synthesizeURL = '/api/text-to-speech/synthesize' +
-      '?voice=' + voice +
-      '&text=' + encodeURIComponent(textString) +
-      '&X-WDC-PL-OPT-OUT=' +  sessionPermissions;
-    // attach the synthesize URL to the audio player  
-    audio.src = synthesizeURL
-    // and pause it in case it's currently running
-    audio.pause();
-    // add an event listener and the function to call when the voice comes back
-    audio.addEventListener('canplaythrough', onCanplaythrough);
-    // mute the audio player
-    audio.muted = true;
-    // set the audio element to play mode, to prepare it for the returning signal
-    audio.play();
-    // change the cursor so that there's a visual cue that we're now waiting on the server 
-    // to send an audio signal back
-    $('body').css('cursor', 'wait');
-    $('.readText').css('cursor', 'wait');
-    return true;
+    if(this.className == "mic_enabled")
+    {
+    toggle_mic(_mic, _stop, false)
+    nextStep();
+    }
   });
+
+  NLC_Button.on("click",  function()
+    {
+      nextStep();
+    });
+    startDialog(dialog_target);
 }
 /**
- * This function is called each time an audio signal comes back from the server
+ * This is a refactoring of the logic from previous chapters which toggled the state
+ * of the microphone and stop icons. 
+ * @param {jQuery object} _microphone - Jquery object pointing to the microphone html element
+ * @param {jQuery object} _stopbutton - Jquery object pointing to the stop html element
+ * @param {boolean} b_on - boolean flag identifying if this is to enable the stop button (true) or the microphone (false)
  */
+function toggle_mic(_microphone, _stopbutton, b_on)
+{
+  if(b_on) // microphone button clicked, enable stop button
+  {
+    _microphone.addClass("mic_disabled");
+    _microphone.removeClass("mic_enabled");
+    _stopbutton.addClass("mic_enabled");
+    _stopbutton.removeClass("mic_disabled");
+  } else // stop button clicked, enable microphone button
+  {
+    if (!((typeof(stream) == "undefined") || (stream == null))) {stream.stop(); }
+    _microphone.addClass("mic_enabled");
+    _microphone.removeClass("mic_disabled");
+    _stopbutton.addClass("mic_disabled");
+    _stopbutton.removeClass("mic_enabled");
+  }
+}
+
+/**
+ * create a function to handle speech to text in general
+ * pass in the name of the HTML object which will display the received text. 
+ * This function has been refactored so that the get token function is called only once, rather
+ * than every time the microphone has been activated.
+ * @param {jQuery object} _target - Jquery object pointing to the speech to text output html element
+ */
+function listen(_target)
+{
+  // b_token is a boolean (e.g. only true or false) flag that tells us if we have previously retrieved a token 
+  if (!b_token)
+  {
+    // get the token
+    $.when($.get('/api/speech-to-text/token')).done(
+      function (token) {
+        // save the token returned by the server
+        document.cookie = "stt-token="+token;
+        // set the boolean flag to indicate that we have both retrieved AND saved the token
+        b_token = true
+        // set up the stream from the microphone to Watson
+        stream = WatsonSpeech.SpeechToText.recognizeMicrophone({
+           token: token,
+           outputElement: _target // CSS selector or DOM Element
+         });
+         // if there is an error, display it on the browser console.
+        stream.on('error', function(err) { console.log(err); });
+      });
+  }else
+  {
+      // set up the stream from the microphone to Watson
+      stream = WatsonSpeech.SpeechToText.recognizeMicrophone({
+        // retrieve the previously saved token
+      token: getCookieValue("stt-token"),
+      outputElement: _target // CSS selector or DOM Element
+    });
+    // if there is an error, display it on the browser console.
+   stream.on('error', function(err) { console.log(err); });
+
+  }
+}
+// create a function to handle text to speech in general
+// pass in the text string to be read, the audio player to use and if the audio player should be displayed.
+function speak (_chat, _a_player_target, b_display)
+{
+  var sessionPermissions = JSON.parse(localStorage.getItem('sessionPermissions')) ? 0 : 1;
+  var textString = _chat;
+  var voice = 'en-US_AllisonVoice';
+  var audioFrame = $(_a_player_target);
+  var audio = audioFrame.get(0);
+  var synthesizeURL = '/api/text-to-speech/synthesize' +
+    '?voice=' + voice +
+    '&text=' + encodeURIComponent(textString) +
+    '&X-WDC-PL-OPT-OUT=' +  sessionPermissions;
+  audio.src = synthesizeURL
+  audio.pause();
+  audio.addEventListener('canplaythrough', onCanplaythrough);
+  audio.muted = true;
+  audio.play();
+  (b_display) ? audioFrame.show() : audioFrame.hide();
+}
+
 function onCanplaythrough() {
-  console.log('onCanplaythrough');
-  // get the audio player (we could save a step if we passed that in as a parameter from the preceding function)
-  var audio = $('#a_player').get(0);
-  // remove the event listener. 
-  // Why are we doing this? 
-  // Each time the readText button is clicked, we add an event listener. But we only want one,
-  // so once the event listener process kicks off, we remove the current listener. 
-  // this lightens the load on the browser and makes the application more robust
+  var audio = $(a_player_target).get(0);
   audio.removeEventListener('canplaythrough', onCanplaythrough);
-  // some versions of FireFox have an undetermined bug which causes the audio player to
-  // fail if the following try/catch block is missing
   try { audio.currentTime = 0; }
   catch(ex) { // ignore. Firefox just freaks out here for no apparent reason.
             }
-  // display the audio controls
   audio.controls = true;
-  // unmute the player
   audio.muted = false;
-  // animate the audio player, so that there is a visual cue on where we are in the 
-  // current playback
   $('html, body').animate({scrollTop: $('#a_player').offset().top}, 500);
-  // reset the cursor to whatever the user has specified as their default browser cursor. 
   $('body').css('cursor', 'default');
 }

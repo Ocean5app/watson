@@ -9,3 +9,4 @@ applications:
   services:
     - Speech to Text-0j
     - Text to Speech-0l
+    - Natural Language Classifier-i3
