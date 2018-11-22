@@ -22,15 +22,7 @@ var _mic; var _stop; var toLoad ="";
 
 function initPage ()
 { document.cookie = "stt-token=";
-
-  var b_authenticated = checkAuthenticated();
-  if (b_authenticated == false)
-  { toLoad = "login_1.html"; } else {toLoad = "body.html";}
-  $.when($.get(toLoad)).done(function (page)
-    {$("#body").empty(); $("#body").append(page);
-    if (b_authenticated == true)
-    {  initiateDialog(); }
-    else {  authenticate(); }});
+  loadPage('discovery');
 }
 
 function initiateDialog ()

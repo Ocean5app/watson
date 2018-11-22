@@ -17,6 +17,14 @@
 var cloudantAuth;
 var cloudant_credentials;
 var request = require('request');
+function displayObjectProperties(_obj)
+{
+  for(var property in _obj){ console.log("object property: "+property ); }
+}
+function displayObjectPropertyValues(_obj)
+{
+  for(var property in _obj){ console.log("object property: "+property+" with value: "+_obj[property] ); }
+}
 exports.authenticate=authenticate;
 exports.logout=logout;
 exports.create=create;
@@ -61,10 +69,10 @@ function create(_name, _clear)
       var _body = JSON.parse(body);
         if ((error) || ((typeof(_body.error) != 'undefined') && (_body.error != null)))
           { if ((typeof(_body.error) != 'undefined') && (_body.error != null))
-            {console.log("create error body: "+body);}
-            else {console.log("create error error: "+error)}
+            { }
+            else { }
           }
-        else { displayObjectPropertyValues(JSON.parse(body)); }
+        else { }
         if((typeof(_clear) != 'undefined') && (_clear == 'clear'))
           {drop(_name, create)}
     });
@@ -184,12 +192,4 @@ function capabilities()
   _c.listAllDocuments = "function (_name): list all documents in database _name";
   _c.capabilities = "return this object with descriptors."
   return (_c);
-}
-function displayObjectProperties(_obj)
-{
-  for(var property in _obj){ console.log("object property: "+property ); }
-}
-function displayObjectPropertyValues(_obj)
-{
-  for(var property in _obj){ console.log("object property: "+property+" with value: "+_obj[property] ); }
 }

@@ -1,6 +1,6 @@
 applications:
 - path: .
-  memory: 128M
+  memory: 256M
   instances: 1
   domain: mybluemix.net
   name: Ocean5app
@@ -11,3 +11,6 @@ applications:
     - Text to Speech-0l
     - Natural Language Classifier-i3
     - Cloudant-um
+    - Discovery-qy
+    - Visual Recognition-9w
+    - Watson Assistant-07
