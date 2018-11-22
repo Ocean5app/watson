@@ -5,6 +5,7 @@
  */
 var express = require('express');// 各种模块开始导入
 var http = require('http');
+var https = require('https');
 var path = require('path');
 var fs = require('fs');
 var mime = require('mime');
@@ -24,12 +25,56 @@ var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var cfenv = require('cfenv');
 
-var vcapServices = require('vcap_services');// 导入完了
+var session = require('express-session');
+var cloudant = require('cloudant');
+var myDB = require('./controller/restapi/features/cloudant_utils');
+myDB.authenticate(myDB.create, '');
+var sessionBase  = require('./controller/sessionManagement');
+var sessionStore = Object.create(sessionBase.SessionObject);
+
+var vcapServices = require('vcap_services');
+var uuid = require('uuid');
+var env = require('./controller/env.json');
+
+var sessionSecret = env.sessionSecret;
+var gmailCredentials = env.gmail;
 
 var appEnv = cfenv.getAppEnv(); //取得云环境参数
 var app = express(); //新建express实例
 
-app.use(cookieParser()); //cookieParser中间件用于获取web浏览器发送的cookie中的内容. 不用这个下面就不能用 req.cookies 来取得客户端来的cookie值
+// the session secret is a text string of arbitrary length which is
+//  used to encode and decode cookies sent between the browser and the server
+/**
+for information on how to enable https support in osx, go here:
+  https://gist.github.com/nrollr/4daba07c67adcb30693e
+openssl genrsa -out key.pem
+openssl req -new -key key.pem -out csr.pem
+openssl x509 -req -days 9999 -in csr.pem -signkey key.pem -out cert.pem
+**/
+if (cfenv.getAppEnv().isLocal == true)
+{
+  var pkey = fs.readFileSync('key.pem');
+  var pcert = fs.readFileSync('cert.pem')
+
+  var httpsOptions = { key: pkey, cert: pcert };
+} else {
+  app.enable('trust proxy');
+  app.use (function (req, res, next) {
+          if (req.secure) {next();}
+          else {res.redirect('https://' + req.headers.host + req.url);}
+  });
+}
+app.use(cookieParser(sessionSecret));
+app.use( session( {
+    store: sessionStore,
+    secret: sessionSecret, resave: false, saveUninitialized: true,
+    cookie: {secure: true, maxAge:24*60*60*1000},
+    genid: function (req) {return uuid.v4()}
+  }));
+app.get('/login*', function (req, res) {console.log("login session is: "+req.session); loadSelectedFile(req, res);});
+
+
+//app.use(cookieParser()); //cookieParser中间件用于获取web浏览器发送的cookie中的内容. 不用这个下面就不能用 req.cookies 来取得客户端来的cookie值
 /*body-parser: Parse incoming request bodies in a middleware before your handlers, available under the req.body property.
 */
 /*bodyParser.urlencoded([options])
