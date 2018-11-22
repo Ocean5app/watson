@@ -1,20 +1,5 @@
-/**
- * Copyright 2015 IBM Corp. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 /*
- * Zero to Cognitive Chapter 11
+ * ocean5app@outlook.com
  */
 var express = require('express');
 var http = require('http');
@@ -36,15 +21,15 @@ var sessionStore = Object.create(sessionBase.SessionObject);
 var vcapServices = require('vcap_services');
 var uuid = require('uuid');
 var env = require('./controller/env.json');
-var sessionSecret = env.sessionSecret;
-var gmailCredentials = env.gmail;
-var appEnv = cfenv.getAppEnv();
-var app = express();
-var busboy = require('connect-busboy');
-app.use(busboy());
-
 // the session secret is a text string of arbitrary length which is
 //  used to encode and decode cookies sent between the browser and the server
+var sessionSecret = env.sessionSecret; //"sessionSecret" : "test1"
+var gmailCredentials = env.gmail; //OAuth ??
+var appEnv = cfenv.getAppEnv();
+var app = express();
+var busboy = require('connect-busboy'); // file upload
+app.use(busboy());
+
 /**
 for information on how to enable https support in osx, go here:
   https://gist.github.com/nrollr/4daba07c67adcb30693e
@@ -76,10 +61,9 @@ app.use( session( {
 
 app.get('/login*', function (req, res) {loadSelectedFile(req, res);});
 
-
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(bodyParser.json({limit: '50mb'}));
-app.set('appName', 'z2c-chapter11');
+app.set('appName', 'Watson Demo');
 app.set('port', appEnv.port);
 
 app.set('views', path.join(__dirname + '/HTML'));

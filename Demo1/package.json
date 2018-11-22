@@ -1,8 +1,8 @@
 {
-  "name": "z2c-chapter11",
+  "name": "wy-watson-demo1",
   "version": "1.0.0",
   "private": true,
-  "description": "Zero to Cognitive Tutorial Series",
+  "description": "watson demo1",
   "main": "index.js",
   "scripts": {
     "test": "\"\"",
@@ -10,16 +10,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/rddill-IBM/ZeroToCognitive"
+    "url": "https://github.com/Ocean5app/watson"
   },
-  "engines": {"node" : ">=8.10"},
+  "engines": {
+    "node": ">=8.10"
+  },
   "keywords": [
     "Watson",
     "Cognitive",
     "Demo",
     "Bluemix"
   ],
-  "author": "Bob Dill, IBM Distinguished Engineer",
+  "author": "Wu Yang, IBM Engineer",
   "license": "Apache-2.0",
   "dependencies": {
     "body-parser": "^1.15.0",
