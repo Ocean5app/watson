@@ -1,0 +1,12 @@
+applications:
+- path: .
+  memory: 256M
+  instances: 1
+  domain: mybluemix.net
+  name: Ocean5app
+  host: Ocean5app
+  disk_quota: 1024M
+  services:
+    - Speech to Text-0j
+    - Text to Speech-0l
+    - Watson Assistant-07
